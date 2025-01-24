@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - stock_network
+
+  stocks-svr:
+    build:
+      context: .
+      dockerfile: stocks/Dockerfile
+    environment:
+      - FLASK_APP=portfolio.py
+      - FLASK_RUN_PORT=8000
+      - DB_NAME=stocks_db
+      - COLLECTION_NAME=stocks
+      - NINJA_API_KEY=${NINJA_API_KEY}
+    ports:
+      - "5001:8000"
+    depends_on:
+      - mongodb
+    networks:
+      - stock_network
+    restart: always
+    expose:
+      - 8000
+
+  capital-gains:
+    build:
+      context: .
+      dockerfile: capital-gains/Dockerfile
+    environment:
+      - FLASK_APP=gains.py
+      - FLASK_RUN_PORT=8080
+    ports:
+      - "5003:8080"
+    depends_on:
+      - stocks-svr
+    networks:
+      - stock_network
+
+networks:
+  stock_network:
+    driver: bridge
