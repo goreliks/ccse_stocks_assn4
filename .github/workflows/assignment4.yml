@@ -15,6 +15,9 @@ jobs:
       - name: Log Start Time
         run: echo "$(date -Iminutes)" > log.txt
 
+      - name: Create .env file
+        run: echo "NINJA_API_KEY=${{secrets.NINJA_API_KEY}}" > .env
+
       - name: Log Submitter
         run: echo "Alexander Gorelik" >> log.txt
 
