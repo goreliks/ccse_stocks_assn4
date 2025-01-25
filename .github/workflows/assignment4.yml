@@ -70,4 +70,86 @@ jobs:
           name: log
           path: /tmp/log.txt
 
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download log artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: log
+          path: /tmp
+
+      - name: Download stocks artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: stocks-image
+          path: /tmp
+
+      - name: Download capital-gains artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: capital-gains-image
+          path: /tmp
+
+      - name: Load Stocks service image
+        run: docker load --input /tmp/stocks_image.tar
+
+      - name: Load Capital Gains service image
+        run: docker load --input /tmp/capital-gains_image.tar
+
+      - name: Create .env file
+        run: echo "NINJA_API_KEY=${{secrets.NINJA_API_KEY}}" > .env
+
+      - name: Run Containers
+        run: docker-compose up -d
+
+      - name: Update log for container status
+        run: docker ps | grep -q stocks && docker ps | grep -q capital-gains && echo "Container up and running" >> /tmp/log.txt || echo "Container failed to run" >> /tmp/log.txt
+
+      - name: Wait for container to initialize
+        run: sleep 5
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install requests
+
+      - name: Test with pytest
+        run: pytest -v tests/assn4_tests.py > /tmp/assn4_test_results.txt
+
+      - name: Ensure Test Results File Exists
+        if: always()
+        run: touch /tmp/assn4_test_results.txt
+
+      - name: Update Log for Test Results
+        if: always()
+        run: |
+          if grep -q "failed" /tmp/assn4_test_results.txt; then
+            echo "tests failed" >> /tmp/log.txt
+          else
+            echo "tests succeeded" >> /tmp/log.txt
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: /tmp/assn4_test_results.txt
+
+      - name: Upload Updated Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log
+          path: /tmp/log.txt
+
 
