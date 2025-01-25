@@ -1,7 +1,5 @@
 import pytest
 import requests
-import random
-import string
 
 # Base URLs for services
 CAPITAL_GAINS_URL = "http://localhost:5003"
@@ -83,7 +81,6 @@ def capital_gains_url():
     return CAPITAL_GAINS_URL
 
 
-@pytest.mark.dependency()
 def test_post_stocks(stocks_url):
     ids = []
     for stock, stock_meta in zip([stock1, stock2, stock3], ['stock1', 'stock2', 'stock3']):
@@ -96,7 +93,6 @@ def test_post_stocks(stocks_url):
     assert len(ids) == len(set(ids))
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_get_stock(stocks_url):
     stock_1_id = meta_data['stock1']['id']
 
@@ -106,7 +102,6 @@ def test_get_stock(stocks_url):
     assert response_data["symbol"] == "NVDA"
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_get_all_stocks(stocks_url):
     response = requests.get(f"{stocks_url}/stocks")
     assert response.status_code == 200
@@ -114,7 +109,6 @@ def test_get_all_stocks(stocks_url):
     assert len(response_data) == 3
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_get_stock_value(stocks_url):
     for stock, expected_symbol in zip([meta_data['stock1'],
                                           meta_data['stock2'],
@@ -128,7 +122,6 @@ def test_get_stock_value(stocks_url):
         stock['sv'] = response_data["stock value"]
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_portfolio_value(stocks_url):
     response = requests.get(f"{stocks_url}/portfolio-value")
     assert response.status_code == 200
@@ -143,13 +136,11 @@ def test_portfolio_value(stocks_url):
     assert portfolio_value * 0.97 <= total_value <= portfolio_value * 1.03
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_invalid_stock_symbol(stocks_url):
     response = requests.post(f"{stocks_url}/stocks", json=stock7)
     assert response.status_code == 400
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_delete_stock(stocks_url):
     stock_id = meta_data['stock2']['id']
 
@@ -157,7 +148,6 @@ def test_delete_stock(stocks_url):
     assert response.status_code == 204
 
 
-@pytest.mark.dependency(depends=["test_delete_stock"])
 def test_get_deleted_stock(stocks_url):
     stock_id = meta_data['stock2']['id']
 
@@ -165,7 +155,6 @@ def test_get_deleted_stock(stocks_url):
     assert response.status_code == 404
 
 
-@pytest.mark.dependency(depends=["test_post_stocks"])
 def test_invalid_purchase_date(stocks_url):
     response = requests.post(f"{stocks_url}/stocks", json=stock8)
     assert response.status_code == 400
