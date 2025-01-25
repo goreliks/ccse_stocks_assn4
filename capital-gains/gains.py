@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-STOCKS_URL = "http://stocks-svr:8000/stocks"
-STOCK_VALUE_URL_TEMPLATE = "http://stocks-svr:8000/stock-value/{stock_id}"
+STOCKS_URL = "http://stocks:8000/stocks"
+STOCK_VALUE_URL_TEMPLATE = "http://stocks:8000/stock-value/{stock_id}"
 
 
 def get_current_price(stock_id):

@@ -8,7 +8,7 @@ services:
     networks:
       - stock_network
 
-  stocks-svr:
+  stocks:
     build:
       context: .
       dockerfile: stocks/Dockerfile
@@ -38,7 +38,7 @@ services:
     ports:
       - "5003:8080"
     depends_on:
-      - stocks-svr
+      - stocks
     networks:
       - stock_network
 
