@@ -5,7 +5,6 @@ on:
 
 jobs:
   build:
-    name: Build and Export Docker Images
     runs-on: ubuntu-latest
 
     steps:
@@ -105,7 +104,7 @@ jobs:
         run: echo "NINJA_API_KEY=${{secrets.NINJA_API_KEY}}" > .env
 
       - name: Run Containers
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Update log for container status
         run: docker ps | grep -q stocks && docker ps | grep -q capital-gains && echo "Container up and running" >> /tmp/log.txt || echo "Container failed to run" >> /tmp/log.txt
@@ -151,5 +150,6 @@ jobs:
         with:
           name: log
           path: /tmp/log.txt
+          overwrite: true
 
 
