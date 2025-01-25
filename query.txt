@@ -1,0 +1,5 @@
+stocks:shares=7
+stocks:name=Apple
+stocks:symbol=NVDA
+capital-gains:numsharesgt=10
+capital-gains:numshareslt=30

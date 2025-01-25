@@ -152,4 +152,83 @@ jobs:
           path: /tmp/log.txt
           overwrite: true
 
+  query:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Download stocks artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: stocks-image
+          path: /tmp
+
+      - name: Download capital-gains artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: capital-gains-image
+          path: /tmp
+
+      - name: Load Stocks service image
+        run: docker load --input /tmp/stocks_image.tar
+
+      - name: Load Capital Gains service image
+        run: docker load --input /tmp/capital-gains_image.tar
+
+      - name: Create .env file
+        run: echo "NINJA_API_KEY=${{secrets.NINJA_API_KEY}}" > .env
+
+      - name: Run Containers
+        run: docker compose up -d
+
+      - name: Add Stocks to Database
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d '{"name":"NVIDIA Corporation","symbol":"NVDA","purchase price":134.66,"purchase date":"18-06-2024","shares":7}' http://localhost:5001/stocks
+          curl -X POST -H "Content-Type: application/json" -d '{"name":"Apple Inc.","symbol":"AAPL","purchase price":183.63,"purchase date":"22-02-2024","shares":19}' http://localhost:5001/stocks
+          curl -X POST -H "Content-Type: application/json" -d '{"name":"Alphabet Inc.","symbol":"GOOG","purchase price":140.12,"purchase date":"24-10-2024","shares":14}' http://localhost:5001/stocks
+          curl -X POST -H "Content-Type: application/json" -d '{"name":"Tesla, Inc.","symbol":"TSLA","purchase price":194.58,"purchase date":"28-11-2022","shares":32}' http://localhost:5001/stocks
+          curl -X POST -H "Content-Type: application/json" -d '{"name":"Microsoft Corporation","symbol":"MSFT","purchase price":420.55,"purchase date":"09-02-2024","shares":35}' http://localhost:5001/stocks
+          curl -X POST -H "Content-Type: application/json" -d '{"name":"Intel Corporation","symbol":"INTC","purchase price":19.15,"purchase date":"13-01-2025","shares":10}' http://localhost:5001/stocks
+
+      - name: Read and Process Query File
+        run: |
+          RESPONSE_FILE=/tmp/response.txt
+          QUERY_FILE=query.txt
+          
+          # Ensure response.txt is empty before processing
+          > $RESPONSE_FILE
+          
+          while IFS= read -r line; do
+            # Parse the service name and query string
+            SERVICE=$(echo "$line" | cut -d':' -f1)
+            QUERY_STRING=$(echo "$line" | cut -d':' -f2 | xargs)
+  
+            # Formulate the URL based on the service
+            if [[ $SERVICE == "stocks" ]]; then
+              URL="http://localhost:5001/stocks?$QUERY_STRING"
+            elif [[ $SERVICE == "capital-gains" ]]; then
+              URL="http://localhost:5003/capital-gains?$QUERY_STRING"
+            else
+              echo "Unknown service: $SERVICE" >> $RESPONSE_FILE
+              continue
+            fi
+  
+            # Execute the GET request and capture the response
+            RESPONSE=$(curl -s "$URL")
+  
+            # Append the query and response to the response file
+            echo "query: $line" >> $RESPONSE_FILE
+            echo "response: $RESPONSE" >> $RESPONSE_FILE
+          done < $QUERY_FILE
+
+      - name: Ensure Response File Exists
+        if: always()
+        run: touch /tmp/response.txt
+          
+      - name: Upload Response File
+        uses: actions/upload-artifact@v4
+        with:
+          name: response
+          path: /tmp/response.txt
