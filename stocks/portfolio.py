@@ -59,8 +59,15 @@ def get_stock_price(symbol):
 def get_stocks():
     try:
         query_params = request.args
-        query = {key: value for key, value in query_params.items()}
-
+        query = {}
+        # query = {key: value for key, value in query_params.items()}
+        for key, value in query_params.items():
+            if key == "shares":
+                query[key] = int(value)
+            elif key == "purchase price":
+                query[key] = float(value)
+            else:
+                query[key] = value
         stocks = list(stocks_collection.find(query, {"_id": 0}))
         return jsonify(stocks), 200
     except Exception as e:
