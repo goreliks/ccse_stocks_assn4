@@ -9,9 +9,7 @@ services:
       - stock_network
 
   stocks:
-    build:
-      context: .
-      dockerfile: stocks/Dockerfile
+    image: stocks:latest
     environment:
       - FLASK_APP=portfolio.py
       - FLASK_RUN_PORT=8000
@@ -29,9 +27,7 @@ services:
       - 8000
 
   capital-gains:
-    build:
-      context: .
-      dockerfile: capital-gains/Dockerfile
+    image: capital-gains:latest
     environment:
       - FLASK_APP=gains.py
       - FLASK_RUN_PORT=8080
