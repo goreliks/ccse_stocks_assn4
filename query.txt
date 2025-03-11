@@ -1,4 +1,7 @@
-stocks:symbol=NVDA
-stocks:shares=7
-capital-gains:symbol=AAPL
+stocks:shares=14
+stocks:symbol=TSLA
 stocks:shares=100
+capital-gains:numsharesgt=15
+capital-gains:numshareslt=10
+capital-gains:shares=7
+capital-gains:portfolio-value
